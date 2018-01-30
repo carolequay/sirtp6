@@ -43,8 +43,10 @@ pokeApp.controller("controller", ['$scope', '$log', function($scope, $log){
 	console.log($scope.listePokemon);
 	// activation de mon button
 	$scope.choix = function(){
-		// natif javascript
+		// log natif javascript
 		// console.log($scope.selection);
+		// affichage du choix dresseur
+		// $scope.choixDresseur = $scope.selection;
 		$log.log($scope.selection);
 	};
 }]);
