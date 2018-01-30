@@ -1,1 +1,2 @@
-# sirtp6
+# teaching-jxs-tp5
+TP6 : AngularJS
