@@ -10,8 +10,9 @@
 <body ng-app="pokedex">
 
 	<div class="container">
-		<h1>Pokésir</h1>
-
+        
+        <h1>Pokésir</h1>
+        
 		<!-- Search -->
 		<div ng-controller="controller">
             <!-- exemple de data-binding
@@ -19,13 +20,16 @@
             <h1> {{id}} </h1>
             -->
             <input ng-model="id">
-
+            <br/>
+            <br/>
             <input ng-model="name">
-
+            <br/>
+            <br/>
             <select ng-model="selection">
-                <option ng-repeat="indice in listePokemon | filter : name | filter : id"> {{indice.name}} </option>
+                <option ng-repeat="indice in listePokemon | orderBy: 'id' | filter: name | filter: id"> {{indice.id}} - {{indice.name}} </option>
             </select>
-            <button ng-click="choix()"> Go ! </button>
+            <!-- bouton jaune : team instinct ! -->
+            <button class="btn btn-warning" ng-click="choix()"> Go ! </button>
            <!--affichage choix
            {{choixDresseur}}-->
         </div>
