@@ -26,9 +26,27 @@ pokeApp.factory('description', ['$resource', 'POKEAPI', function($resource, POKE
   return $resource(POKEAPI+"/api/v2/pokemon-species/:id");
 }]);
 
+// service contenant au moins le nom et le prénom du pokémon
+pokeApp.service('passerelle', ['$resource', function($resource){
+	this.idPokemon = 0;
+	this.nomPokemon = '';
+	
+	this.enleverEspaces = function(mot){
+		var res = "";
+		var continuer = true;
+		
+		for(var i in mot){
+			if(mot[i] != " "){
+				res += mot[i] + "";
+			}
+		}
+		
+		return res;
+	}
+}]);
 
 // création du controleur
-pokeApp.controller("controller", ['$scope', '$log', 'service', function($scope, $log, service){
+pokeApp.controller("controller", ['$scope', '$log', 'service', 'passerelle', function($scope, $log, service, passerelle){
 	//nouvel objet angular liant le HTML et le javascript : objet liste de pokemons
 	//objet tableau associatif clé valeur {}
 	// tableau partie 1
@@ -91,50 +109,69 @@ pokeApp.controller("controller", ['$scope', '$log', 'service', function($scope, 
 		// log natif javascript
 		// console.log($scope.selection);
 		// affichage du choix dresseur
-		$scope.choixDresseur = ".: Chargement du pokémon : " + $scope.selection + " :.";
-		
-		// recherche des informations du pokemon
+		try{
+			$scope.choixDresseur = $scope.selection.split(" - ");
+			
+			// recherche des informations du pokemon
+			passerelle.idPokemon = passerelle.enleverEspaces($scope.choixDresseur[0]);
+			passerelle.nomPokemon = passerelle.enleverEspaces($scope.choixDresseur[1]);
+			
+			$log.log(passerelle.idPokemon + " " + passerelle.nomPokemon);
+		} catch(e){}
 	};
 }]);
 
-pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description', function($scope, $log, recherche, description){
+pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description', 'passerelle', function($scope, $log, recherche, description, passerelle){
 	$scope.nom = "Sélectionnez un pokémon et cliquez sur 'GO!'";
 	$scope.habilites = [];
 	$scope.types = [];
 	$scope.attaques = [];
 	$scope.description = "";
 	
-	var informations = recherche.get({id : "1"}, function(){
-		$log.log(informations);
-		// le nom
-		$scope.nom = informations["name"];
-		
-		// les abilités
-		$scope.habilites = [];
-		for(var a in informations["abilities"]){
-			$scope.habilites.push(informations["abilities"][a]["ability"]["name"]);
+	$scope.$watch(
+		function(){
+			return passerelle.idPokemon;
+		}, function(){
+			// si l'id est égal à zéro, ça veut dire qu'on vient juste de charger la page. On peut donc quitter la fonction
+			if(passerelle.idPokemon == 0){
+				return;
+			}
+			
+			// sinon on cherche les informations
+			$log.log(passerelle.idPokemon);
+			var informations = recherche.get({id : passerelle.idPokemon}, function(){
+				$log.log(informations);
+				// le nom
+				$scope.nom = informations["name"];
+				
+				// les abilités
+				$scope.habilites = [];
+				for(var a in informations["abilities"]){
+					$scope.habilites.push(informations["abilities"][a]["ability"]["name"]);
+				}
+				
+				// le(s) type(s)
+				$scope.types = [];
+				for(var a in informations["types"]){
+					$scope.types.push(informations["types"][a]["type"]["name"]);
+				}
+				
+				// les attaques
+				$scope.attaques = [];
+				for(var a in informations["moves"]){
+					$scope.attaques.push(informations["moves"][a]["move"]["name"]);
+				}
+			});
+			
+			// la description
+			try{
+				var desc = description.get({id : passerelle.idPokemon}, function(){
+					$log.log(desc);
+					$scope.description = desc["flavor_text_entries"][21]["flavor_text"];
+				});
+			} catch(e){
+				$scope.description = "Pas de description";
+			}
 		}
-		
-		// le(s) type(s)
-		$scope.types = [];
-		for(var a in informations["types"]){
-			$scope.types.push(informations["types"][a]["type"]["name"]);
-		}
-		
-		// les attaques
-		$scope.attaques = [];
-		for(var a in informations["moves"]){
-			$scope.attaques.push(informations["moves"][a]["move"]["name"]);
-		}
-	});
-	
-	// la description
-	try{
-		var desc = description.get({id : "1"}, function(){
-			$log.log(desc);
-			$scope.description = desc["flavor_text_entries"][21]["flavor_text"];
-		});
-	} catch(e){
-		$scope.description = "Pas de description";
-	}
+	);
 }]);
