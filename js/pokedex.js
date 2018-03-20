@@ -3,7 +3,7 @@ var pokeApp = angular.module('pokedex', ['ngResource']);
 // With this you can inject POKEAPI url wherever you want
 // constante : base de données des pokemons
 // aura besoin d'un modèle (= service pour angular) pour taper dans la BD et être utilisé par le controller
-pokeApp.constant('POKEAPI', 'https://cors.now.sh/http://pokeapi.co');
+pokeApp.constant('POKEAPI', 'https://pokeapi.co');
 
 // configuration
 pokeApp.config(['$resourceProvider', function($resourceProvider) {
@@ -14,6 +14,16 @@ pokeApp.config(['$resourceProvider', function($resourceProvider) {
 // création du service API
 pokeApp.factory('service', ['$resource', 'POKEAPI', function($resource, POKEAPI) {
   return $resource(POKEAPI+"/api/v1/pokedex");
+}]);
+
+// création de la recherche des informations du pokemon
+pokeApp.factory('recherche', ['$resource', 'POKEAPI', function($resource, POKEAPI) {
+  return $resource(POKEAPI+"/api/v2/pokemon/:id");
+}]);
+
+// création de la recherche de la description
+pokeApp.factory('description', ['$resource', 'POKEAPI', function($resource, POKEAPI) {
+  return $resource(POKEAPI+"/api/v2/pokemon-species/:id");
 }]);
 
 
@@ -81,7 +91,50 @@ pokeApp.controller("controller", ['$scope', '$log', 'service', function($scope, 
 		// log natif javascript
 		// console.log($scope.selection);
 		// affichage du choix dresseur
-		// $scope.choixDresseur = $scope.selection;
-		$log.log($scope.selection);
+		$scope.choixDresseur = ".: Chargement du pokémon : " + $scope.selection + " :.";
+		
+		// recherche des informations du pokemon
 	};
+}]);
+
+pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description', function($scope, $log, recherche, description){
+	$scope.nom = "Sélectionnez un pokémon et cliquez sur 'GO!'";
+	$scope.habilites = [];
+	$scope.types = [];
+	$scope.attaques = [];
+	$scope.description = "";
+	
+	var informations = recherche.get({id : "1"}, function(){
+		$log.log(informations);
+		// le nom
+		$scope.nom = informations["name"];
+		
+		// les abilités
+		$scope.habilites = [];
+		for(var a in informations["abilities"]){
+			$scope.habilites.push(informations["abilities"][a]["ability"]["name"]);
+		}
+		
+		// le(s) type(s)
+		$scope.types = [];
+		for(var a in informations["types"]){
+			$scope.types.push(informations["types"][a]["type"]["name"]);
+		}
+		
+		// les attaques
+		$scope.attaques = [];
+		for(var a in informations["moves"]){
+			$scope.attaques.push(informations["moves"][a]["move"]["name"]);
+		}
+	});
+	
+	// la description
+	try{
+		var desc = description.get({id : "1"}, function(){
+			$log.log(desc);
+			$scope.description = desc["flavor_text_entries"][21]["flavor_text"];
+		});
+	} catch(e){
+		$scope.description = "Pas de description";
+	}
 }]);

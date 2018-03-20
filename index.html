@@ -30,12 +30,51 @@
             </select>
             <!-- bouton jaune : team instinct ! -->
             <button class="btn btn-warning" ng-click="choix()"> Go ! </button>
-           <!--affichage choix
-           {{choixDresseur}}-->
+           <!--affichage choix-->
+		   <br/><br/>
+           {{choixDresseur}}
         </div>
 
 		<!-- Pokémon information -->
-		<div></div>
+		<div ng-controller="informations">
+			<!-- Le nom -->
+			<h1>{{nom}}</h1>
+			
+			<p>{{description}}</p>
+			
+			<!-- Les habilités -->
+			<table class="table table-responsive table-striped table-hover">
+				<tr>
+					<th>Habilités</th>
+				</tr>
+				
+				<tr ng-repeat="h in habilites">
+					<td>{{h}}</td>
+				</tr>
+			</table>
+			
+			<!-- Les types -->
+			<table class="table table-responsive table-striped table-hover">
+				<tr>
+					<th>Types</th>
+				</tr>
+				
+				<tr ng-repeat="t in types">
+					<td>{{t}}</td>
+				</tr>
+			</table>
+			
+			<!-- Les attaques -->
+			<table class="table table-responsive table-striped table-hover">
+				<tr>
+					<th>Attaques</th>
+				</tr>
+				
+				<tr ng-repeat="a in attaques">
+					<td>{{a}}</td>
+				</tr>
+			</table>
+		</div>
 
 	</div>
 
