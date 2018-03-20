@@ -45,6 +45,13 @@ pokeApp.service('passerelle', ['$resource', function($resource){
 	}
 }]);
 
+// la directive permettant d'afficher le pokédex
+pokeApp.directive('pokedex', function(){
+	return {
+		templateUrl: 'pokedex.html'
+	};
+});
+
 // création du controleur
 pokeApp.controller("controller", ['$scope', '$log', 'service', 'passerelle', function($scope, $log, service, passerelle){
 	//nouvel objet angular liant le HTML et le javascript : objet liste de pokemons
@@ -127,6 +134,7 @@ pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description'
 	$scope.types = [];
 	$scope.attaques = [];
 	$scope.description = "";
+	$scope.image = "https://i.imgur.com/vG64e6a.png";
 	
 	$scope.$watch(
 		function(){
@@ -137,12 +145,17 @@ pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description'
 				return;
 			}
 			
+			$scope.image = "pokeball_wait.gif";
+			
 			// sinon on cherche les informations
 			$log.log(passerelle.idPokemon);
 			var informations = recherche.get({id : passerelle.idPokemon}, function(){
 				$log.log(informations);
 				// le nom
 				$scope.nom = informations["name"];
+				
+				// l'image
+				$scope.image = informations["sprites"]["front_default"];
 				
 				// les abilités
 				$scope.habilites = [];
@@ -164,14 +177,29 @@ pokeApp.controller("informations", ['$scope', '$log', 'recherche', 'description'
 			});
 			
 			// la description
-			try{
-				var desc = description.get({id : passerelle.idPokemon}, function(){
-					$log.log(desc);
-					$scope.description = desc["flavor_text_entries"][21]["flavor_text"];
-				});
-			} catch(e){
-				$scope.description = "Pas de description";
-			}
+			var desc = description.get({id : passerelle.idPokemon}, function(){
+				$log.log(desc);
+				var trouve = false;
+				
+				// on cherche la description en français
+				for(var i in desc["flavor_text_entries"]){
+					if(desc["flavor_text_entries"][i]["language"]["name"] == "fr"){
+						$scope.description = desc["flavor_text_entries"][i]["flavor_text"];
+						trouve = true;
+						break;
+					}
+				}
+				
+				if(!trouve){
+					$scope.description = "Pas de description en français";
+				}
+				
+				// fait parler la description
+				var voix = new SpeechSynthesisUtterance($scope.description);
+				voix.default = false;
+				voix.lang = "fr-FR";
+				window.speechSynthesis.speak(voix);
+			});
 		}
 	);
 }]);
